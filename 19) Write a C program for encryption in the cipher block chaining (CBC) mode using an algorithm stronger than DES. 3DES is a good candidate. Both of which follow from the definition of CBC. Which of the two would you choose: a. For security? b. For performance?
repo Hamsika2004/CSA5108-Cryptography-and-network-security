@@ -1,0 +1,29 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <openssl/des.h>
+void encrypt_3des_cbc(const char *input, const char *key, const char *iv, char *output) {
+    DES_cblock des_key1, des_key2, des_key3, des_iv;
+    DES_key_schedule ks1, ks2, ks3;
+    DES_set_key_unchecked((const_DES_cblock *)key, &ks1);
+    DES_set_key_unchecked((const_DES_cblock *)(key + 8), &ks2);
+    DES_set_key_unchecked((const_DES_cblock *)(key + 16), &ks3);
+    memcpy(des_iv, iv, 8);
+    for (int i = 0; i < strlen(input); i += 8) {
+        DES_ncbc_encrypt((const unsigned char *)(input + i), (unsigned char *)(output + i), 8, &ks1, &des_iv, DES_ENCRYPT);
+        DES_ncbc_encrypt((const unsigned char *)(output + i), (unsigned char *)(output + i), 8, &ks2, &des_iv, DES_DECRYPT);
+        DES_ncbc_encrypt((const unsigned char *)(output + i), (unsigned char *)(output + i), 8, &ks3, &des_iv, DES_ENCRYPT);
+    }
+}
+int main() {
+    const char *input = "plaintext";
+    const char *key = "secretkeysecret";
+    const char *iv = "initialiv";
+    char output[100];
+
+    encrypt_3des_cbc(input, key, iv, output);
+
+    printf("Encrypted text: %s\n", output);
+
+    return 0;
+}
